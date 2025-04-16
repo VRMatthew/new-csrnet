@@ -11,6 +11,7 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 from torchvision import datasets, transforms
+from model import CSRNet, make_layers
 
 import numpy as np
 import argparse
@@ -66,7 +67,8 @@ def main():
 
     model = model.cuda()
 
-    criterion = nn.MSELoss(size_average=False).cuda()
+    #criterion = nn.MSELoss(size_average=False).cuda()
+    criterion = nn.MSELoss(reduction='sum').cuda()
 
     optimizer = torch.optim.SGD(model.parameters(), args.lr, # 使用优化器
                                 momentum=args.momentum,
@@ -82,6 +84,8 @@ def main():
             optimizer.load_state_dict(checkpoint['optimizer'])
             print("=> loaded checkpoint '{}' (epoch {})"
                   .format(args.pre, checkpoint['epoch']))
+        # 确保重新初始化 seen 属性
+            model.seen = getattr(model, 'seen', 0)
         else:
             print("=> no checkpoint found at '{}'".format(args.pre))
 
@@ -120,9 +124,12 @@ def train(train_list, model, criterion, optimizer, epoch):
                             ]),
                             train=True,
                             seen=model.seen,
+                            
                             batch_size=args.batch_size,
                             num_workers=args.workers),
         batch_size=args.batch_size)
+    model.seen=getattr(model, 'seen', 0),  # 确保 seen 存在
+    model.seen += len(train_loader.dataset)
     print('epoch %d, processed %d samples, lr %.10f' % (epoch, epoch * len(train_loader.dataset), args.lr))
 
     model.train()

@@ -15,6 +15,7 @@ def load_net(fname, net):
             v.copy_(param)
             
 def save_checkpoint(state, is_best,task_id, filename='checkpoint.pth11.tar'):
+    state['seen'] = getattr(state['model'], 'seen', 0) #保存模型状态时加入seen属性
     torch.save(state, task_id+filename)
     if is_best:
         shutil.copyfile(task_id+filename, task_id+'model_best.pth11.tar')
