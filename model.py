@@ -23,7 +23,7 @@ class ChannelAttention(nn.Module):
 class CSRNet(nn.Module):
     def __init__(self, load_weights=False):
         super(CSRNet, self).__init__()
-        self.seen = 0
+        self.seen = 0  # 初始化 seen 属性
         self.frontend_feat = [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 512, 512, 512]
         self.backend_feat = [512, 512, 512, 256, 128, 64]
         self.frontend = make_layers(self.frontend_feat)
@@ -31,10 +31,6 @@ class CSRNet(nn.Module):
         self.backend = make_layers(self.backend_feat, in_channels=512, dilation=True)
         self.output_layer = nn.Conv2d(64, 1, kernel_size=1)
         self._initialize_weights()
-        
-        if load_weights:
-            mod = models.vgg16(pretrained=True)
-            self.frontend.load_state_dict(mod.features[0:23].state_dict())
 
     def forward(self, x):
         x = self.frontend(x)
